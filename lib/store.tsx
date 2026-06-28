@@ -7,56 +7,65 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { Patient } from "./types";
-import { PATIENTS } from "./data";
+import { AppointmentRecord } from "./types";
+import { APPOINTMENTS } from "./data";
 
 interface CohortStore {
-  patients: Patient[];
+  appointments: AppointmentRecord[];
   selectedIds: string[];
   toggleSelect: (id: string) => void;
   selectAllEligible: () => void;
   clearSelection: () => void;
-  addPatient: (p: Patient) => void;
+  addAppointment: (a: AppointmentRecord) => void;
   dispatchedIds: string[];
   dispatch: () => void;
-  selectedPatients: Patient[];
-  dispatchedPatients: Patient[];
+  selectedAppointments: AppointmentRecord[];
+  dispatchedAppointments: AppointmentRecord[];
+  // The primary record passed to the workflow — first selected.
+  activeAppointment: AppointmentRecord | null;
 }
 
 const Ctx = createContext<CohortStore | null>(null);
 
 export function CohortProvider({ children }: { children: ReactNode }) {
-  const [patients, setPatients] = useState<Patient[]>(PATIENTS);
+  const [appointments, setAppointments] = useState<AppointmentRecord[]>(APPOINTMENTS);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dispatchedIds, setDispatchedIds] = useState<string[]>([]);
 
   const value = useMemo<CohortStore>(() => {
-    const isEligible = (p: Patient) =>
-      p.status !== "Confirmed" && p.status !== "Opted-out";
+    const isEligible = (a: AppointmentRecord) =>
+      a.appointmentStatus !== "Confirmed";
+
+    const selectedAppointments = appointments.filter((a) =>
+      selectedIds.includes(a.appointmentId)
+    );
+    const dispatchedAppointments = appointments.filter((a) =>
+      dispatchedIds.includes(a.appointmentId)
+    );
 
     return {
-      patients,
+      appointments,
       selectedIds,
       dispatchedIds,
+      selectedAppointments,
+      dispatchedAppointments,
+      activeAppointment:
+        dispatchedAppointments.length > 0
+          ? dispatchedAppointments[0]
+          : selectedAppointments[0] ?? null,
       toggleSelect: (id) =>
         setSelectedIds((prev) =>
-          prev.includes(id)
-            ? prev.filter((x) => x !== id)
-            : [...prev, id]
+          prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
         ),
       selectAllEligible: () =>
-        setSelectedIds(patients.filter(isEligible).map((p) => p.id)),
+        setSelectedIds(
+          appointments.filter(isEligible).map((a) => a.appointmentId)
+        ),
       clearSelection: () => setSelectedIds([]),
-      addPatient: (p) => setPatients((prev) => [p, ...prev]),
+      addAppointment: (a) => setAppointments((prev) => [a, ...prev]),
       dispatch: () => setDispatchedIds(selectedIds),
-      get selectedPatients() {
-        return patients.filter((p) => selectedIds.includes(p.id));
-      },
-      get dispatchedPatients() {
-        return patients.filter((p) => dispatchedIds.includes(p.id));
-      },
     };
-  }, [patients, selectedIds, dispatchedIds]);
+  }, [appointments, selectedIds, dispatchedIds]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

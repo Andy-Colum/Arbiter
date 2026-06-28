@@ -1,4 +1,4 @@
-import { Channel, PatientStatus, Risk } from "@/lib/types";
+import { AppointmentStatus, Channel, Risk } from "@/lib/types";
 
 export function RiskBadge({ risk }: { risk: Risk }) {
   const map: Record<Risk, string> = {
@@ -7,26 +7,23 @@ export function RiskBadge({ risk }: { risk: Risk }) {
     Low: "text-[var(--muted)] border-[var(--border)] bg-[var(--panel-2)]",
   };
   return (
-    <span
-      className={`inline-flex rounded border px-1.5 py-0.5 text-[11px] font-medium ${map[risk]}`}
-    >
+    <span className={`inline-flex rounded border px-1.5 py-0.5 text-[11px] font-medium ${map[risk]}`}>
       {risk}
     </span>
   );
 }
 
-export function StatusBadge({ status }: { status: PatientStatus }) {
-  const map: Record<PatientStatus, string> = {
-    New: "text-[var(--blue)] border-[var(--blue)]/30 bg-[var(--blue)]/10",
-    "In progress":
-      "text-[var(--amber)] border-[var(--amber)]/30 bg-[var(--amber)]/10",
+export function StatusBadge({ status }: { status: AppointmentStatus }) {
+  const map: Record<AppointmentStatus, string> = {
+    Upcoming: "text-[var(--blue)] border-[var(--blue)]/30 bg-[var(--blue)]/10",
     Confirmed: "text-[var(--green)] border-[var(--green)]/30 bg-[var(--green)]/10",
-    "Opted-out": "text-[var(--faint)] border-[var(--border)] bg-[var(--panel-2)]",
+    Cancelled: "text-[var(--amber)] border-[var(--amber)]/30 bg-[var(--amber)]/10",
+    "No Show": "text-[var(--accent)] border-[var(--accent)]/30 bg-[var(--accent-soft)]",
+    "Rebooking Needed": "text-[var(--accent)] border-[var(--accent)]/30 bg-[var(--accent-soft)]",
+    Completed: "text-[var(--green)] border-[var(--green)]/30 bg-[var(--green)]/10",
   };
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${map[status]}`}
-    >
+    <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${map[status]}`}>
       {status}
     </span>
   );

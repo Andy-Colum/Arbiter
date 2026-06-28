@@ -1,13 +1,13 @@
-import { Patient } from "@/lib/types";
+import { AppointmentRecord } from "@/lib/types";
 
 export function VideoChannel({
   patient,
   playing,
 }: {
-  patient: Patient;
+  patient: AppointmentRecord;
   playing: boolean;
 }) {
-  const first = patient.name.split(" ")[0];
+  const first = patient.patientName.split(" ")[0];
   return (
     <div className="flex h-full flex-col bg-[#08080b]">
       <div className="relative flex flex-1 items-center justify-center bg-gradient-to-br from-[#1c1318] to-[#0a0a0d]">
@@ -28,9 +28,7 @@ export function VideoChannel({
         </div>
 
         <div className="absolute bottom-3 left-3 right-20 rounded-lg bg-black/70 px-3 py-2 text-[10.5px] leading-snug text-white backdrop-blur">
-          &ldquo;Hi {first}, let&rsquo;s get your{" "}
-          {patient.careNeed.toLowerCase()} rebooked. Tuesday 3 PM is open —
-          shall I book it?&rdquo;
+          &ldquo;Hi {first}, this is Pinecrest Care. Here&rsquo;s what to expect for your {patient.serviceType.toLowerCase()} visit. Please arrive 15 minutes early and bring your ID and insurance card.&rdquo;
         </div>
       </div>
 
@@ -43,7 +41,7 @@ export function VideoChannel({
             Tuesday · 3:00 PM
           </div>
           <div className="text-[11px] text-[var(--faint)]">
-            {patient.careNeed}
+            {patient.serviceType}
           </div>
           <div className="mt-2 flex gap-2">
             <button className="flex-1 rounded-md bg-[var(--accent)] py-1.5 text-[11px] font-semibold text-white">

@@ -1,17 +1,17 @@
-import { Patient } from "@/lib/types";
+import { AppointmentRecord } from "@/lib/types";
 
 export function VoiceChannel({
   patient,
   playing,
 }: {
-  patient: Patient;
+  patient: AppointmentRecord;
   playing: boolean;
 }) {
-  const first = patient.name.split(" ")[0];
+  const first = patient.patientName.split(" ")[0];
   const transcript = [
-    { who: "Arbiter", line: `Hi, is this ${first}? This is the assistant calling on behalf of Pinecrest Care.` },
+    { who: "Arbiter", line: `Hi, is this ${first}? This is the Arbiter assistant calling on behalf of Pinecrest Care.` },
     { who: first, line: "Yes, speaking." },
-    { who: "Arbiter", line: `Your ${patient.careNeed.toLowerCase()} was missed — I can rebook now. Does Tuesday at 3 PM work?` },
+    { who: "Arbiter", line: `We're following up on your ${patient.serviceType.toLowerCase()} appointment. Tuesday at 3:00 PM is the first available slot — does that work?` },
     { who: first, line: "That works." },
     { who: "Arbiter", line: "Great, you're rebooked. I've logged it and a confirmation is on its way." },
   ];

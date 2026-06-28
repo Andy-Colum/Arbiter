@@ -1,41 +1,13 @@
-import { Patient, ScenarioId } from "@/lib/types";
+import { AppointmentRecord } from "@/lib/types";
 
-interface Bubble {
-  from: "them" | "me";
-  text: string;
-}
-
-const responseByScenario: Record<ScenarioId, Bubble[]> = {
-  billing: [
-    { from: "me", text: "Will my insurance cover this infusion? I can't afford a big bill again." },
-    { from: "them", text: "Good question — I've shared what's typically covered and asked a financial counselor to call you with specifics. Your appointment options are still held." },
-  ],
-  language: [
-    { from: "me", text: "Hola, no entiendo bien. ¿Pueden escribirme en español?" },
-    { from: "them", text: "¡Claro! Continuemos en español. El Dr. quiere reprogramar su infusión. ¿Le funciona el martes a las 3 PM?" },
-  ],
-  clinical: [
-    { from: "me", text: "I've had chest tightness and shortness of breath since yesterday." },
-    { from: "them", text: "Thanks for telling me — this needs a nurse. I'm connecting you to our care team now and they'll call you shortly. I won't try to advise on this myself." },
-  ],
-  no_response: [],
-};
-
-export function TextChannel({
-  patient,
-  scenario,
-  responded,
-}: {
-  patient: Patient;
-  scenario: ScenarioId;
-  responded: boolean;
-}) {
-  const intro: Bubble[] = [
-    { from: "them", text: `Hi ${patient.name.split(" ")[0]}, this is Pinecrest Care. We noticed your ${patient.careNeed.toLowerCase()} appointment was missed.` },
-    { from: "them", text: "We'd like to get you rebooked — can I find you a new time?" },
+export function TextChannel({ patient }: { patient: AppointmentRecord }) {
+  const firstName = patient.patientName.split(" ")[0];
+  const messages: { from: "them" | "me"; text: string }[] = [
+    {
+      from: "them",
+      text: `Hi ${firstName}, this is Pinecrest Care. We're confirming your upcoming ${patient.serviceType.toLowerCase()} appointment. Tuesday at 3:00 PM is the first available slot. Would that work for you? Reply YES to confirm, NO for other times, or QUESTION if you need help.`,
+    },
   ];
-  const extra = responded ? responseByScenario[scenario] : [];
-  const thread = [...intro, ...extra];
 
   return (
     <div className="flex h-full flex-col bg-[#0c0c10]">
@@ -50,7 +22,7 @@ export function TextChannel({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3">
-        {thread.map((m, i) => (
+        {messages.map((m, i) => (
           <div
             key={i}
             className={`max-w-[82%] whitespace-pre-line rounded-2xl px-3 py-2 text-[12.5px] leading-snug ${
@@ -62,11 +34,6 @@ export function TextChannel({
             {m.text}
           </div>
         ))}
-        {responded && scenario === "no_response" && (
-          <div className="mx-auto mt-2 rounded-full bg-[#23232a] px-3 py-1 text-[11px] text-[var(--faint)]">
-            No reply · agent escalating to Voice
-          </div>
-        )}
       </div>
 
       <div className="border-t border-white/10 p-3">

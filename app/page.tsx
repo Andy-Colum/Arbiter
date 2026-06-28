@@ -3,54 +3,71 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCohort } from "@/lib/store";
-import { isLocked, CareNeed, Risk, Source } from "@/lib/types";
-import {
-  ChannelBadge,
-  RiskBadge,
-  SourceBadge,
-  StatusBadge,
-} from "@/components/Badges";
-import { AddPatientModal } from "@/components/AddPatientModal";
+import { AppointmentRecord, AppointmentStatus, Risk, ServiceType } from "@/lib/types";
 
-const CARE_NEEDS: (CareNeed | "All")[] = [
+const SERVICE_TYPES: (ServiceType | "All")[] = [
   "All",
-  "Infusion therapy",
-  "Oncology follow-up",
-  "Cardiology follow-up",
-  "Post-discharge check-in",
-  "Imaging / diagnostic",
-  "Lab work",
+  "IV Hydration",
+  "IV Iron Infusion",
+  "Chemotherapy IV Infusion",
+  "Chemotherapy IV Push",
+  "Chemotherapy Injection",
+  "Blood Transfusion",
+  "Biologic Infusion",
+  "Immunoglobulin Infusion",
+  "Neurology Infusion",
+  "Non-Chemo Therapeutic Infusion",
+  "Port Flush / Line Care",
+  "Supportive Oncology Injection",
 ];
+
+const STATUS_COLORS: Record<AppointmentStatus, string> = {
+  Upcoming: "text-[var(--blue)] bg-[var(--blue)]/10 border-[var(--blue)]/20",
+  Confirmed: "text-[var(--green)] bg-[var(--green)]/10 border-[var(--green)]/20",
+  Cancelled: "text-[var(--amber)] bg-[var(--amber)]/10 border-[var(--amber)]/20",
+  "No Show": "text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/20",
+  "Rebooking Needed": "text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/20",
+  Completed: "text-[var(--green)] bg-[var(--green)]/10 border-[var(--green)]/20",
+};
+
+const RISK_COLORS: Record<Risk, string> = {
+  High: "text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/20",
+  Medium: "text-[var(--amber)] bg-[var(--amber)]/10 border-[var(--amber)]/20",
+  Low: "text-[var(--green)] bg-[var(--green)]/10 border-[var(--green)]/20",
+};
+
+function formatDateTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function TriggerIntakePage() {
   const router = useRouter();
-  const {
-    patients,
-    selectedIds,
-    toggleSelect,
-    selectAllEligible,
-    clearSelection,
-    dispatch,
-  } = useCohort();
+  const { appointments, selectedIds, toggleSelect, selectAllEligible, clearSelection, dispatch } =
+    useCohort();
 
   const [query, setQuery] = useState("");
-  const [careNeed, setCareNeed] = useState<CareNeed | "All">("All");
-  const [risk, setRisk] = useState<Risk | "All">("All");
-  const [source, setSource] = useState<Source | "All">("All");
-  const [modalOpen, setModalOpen] = useState(false);
+  const [serviceFilter, setServiceFilter] = useState<ServiceType | "All">("All");
+  const [riskFilter, setRiskFilter] = useState<Risk | "All">("All");
+  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "All">("All");
 
   const filtered = useMemo(() => {
-    return patients.filter((p) => {
-      if (query && !p.name.toLowerCase().includes(query.toLowerCase()))
-        return false;
-      if (careNeed !== "All" && p.careNeed !== careNeed) return false;
-      if (risk !== "All" && p.risk !== risk) return false;
-      if (source !== "All" && p.source !== source) return false;
+    return appointments.filter((a) => {
+      if (query && !a.patientName.toLowerCase().includes(query.toLowerCase())) return false;
+      if (serviceFilter !== "All" && a.serviceType !== serviceFilter) return false;
+      if (riskFilter !== "All" && a.riskLevel !== riskFilter) return false;
+      if (statusFilter !== "All" && a.appointmentStatus !== statusFilter) return false;
       return true;
     });
-  }, [patients, query, careNeed, risk, source]);
+  }, [appointments, query, serviceFilter, riskFilter, statusFilter]);
 
-  const eligibleCount = patients.filter((p) => !isLocked(p)).length;
+  const eligibleCount = appointments.filter((a) => a.appointmentStatus !== "Confirmed").length;
 
   function handleDispatch() {
     if (selectedIds.length === 0) return;
@@ -60,28 +77,38 @@ export default function TriggerIntakePage() {
 
   return (
     <div>
-      <PageHeader />
+      <header className="pt-2">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-[var(--accent)]">
+          Step 01 — Setup
+        </div>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">Trigger Intake</h1>
+        <p className="mt-1 max-w-2xl text-[14px] text-[var(--muted)]">
+          Review infusion appointments with a pending care need. Select records and dispatch
+          to the agent workflow. This is the human gate that keeps the AI bounded.
+        </p>
+      </header>
 
-      {/* Intake lanes */}
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      {/* Summary lane cards */}
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <LaneCard
-          title="EHR-synced intake"
-          desc="Pulled automatically from the scheduling feed."
-          count={patients.filter((p) => p.source === "EHR").length}
+          title="EHR-synced"
+          desc="Pulled from the scheduling feed."
+          count={appointments.filter((a) => a.source === "EHR").length}
           accent
         />
         <LaneCard
-          title="Manually-added"
-          desc="Staff-curated additions for this cohort."
-          count={patients.filter((p) => p.source === "Manual").length}
-          action={
-            <button
-              onClick={() => setModalOpen(true)}
-              className="rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-2.5 py-1 text-[12px] font-medium text-[var(--text)] hover:border-[var(--accent)]"
-            >
-              + Add patient
-            </button>
-          }
+          title="High risk"
+          desc="Flagged for priority outreach."
+          count={appointments.filter((a) => a.riskLevel === "High").length}
+          highlight="accent"
+        />
+        <LaneCard
+          title="Needs recovery"
+          desc="No show or rebooking needed."
+          count={appointments.filter((a) =>
+            ["No Show", "Rebooking Needed", "Cancelled"].includes(a.appointmentStatus)
+          ).length}
+          highlight="amber"
         />
       </div>
 
@@ -94,155 +121,157 @@ export default function TriggerIntakePage() {
           className="w-44 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1.5 text-[13px] outline-none placeholder:text-[var(--faint)] focus:border-[var(--accent)]"
         />
         <Select
-          value={careNeed}
-          onChange={(v) => setCareNeed(v as CareNeed | "All")}
-          options={CARE_NEEDS}
+          value={serviceFilter}
+          onChange={(v) => setServiceFilter(v as ServiceType | "All")}
+          options={SERVICE_TYPES}
+          placeholder="Service type"
         />
         <Select
-          value={risk}
-          onChange={(v) => setRisk(v as Risk | "All")}
+          value={riskFilter}
+          onChange={(v) => setRiskFilter(v as Risk | "All")}
           options={["All", "High", "Medium", "Low"]}
+          placeholder="Risk"
         />
         <Select
-          value={source}
-          onChange={(v) => setSource(v as Source | "All")}
-          options={["All", "EHR", "Manual"]}
-          labels={{ EHR: "EHR-synced", Manual: "Manual" }}
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as AppointmentStatus | "All")}
+          options={["All", "Upcoming", "No Show", "Rebooking Needed", "Confirmed"]}
+          placeholder="Status"
         />
         <div className="ml-auto flex items-center gap-2 text-[12px] text-[var(--muted)]">
-          <button
-            onClick={selectAllEligible}
-            className="rounded px-2 py-1 hover:text-[var(--text)]"
-          >
+          <button onClick={selectAllEligible} className="rounded px-2 py-1 hover:text-[var(--text)]">
             Select all eligible ({eligibleCount})
           </button>
-          <button
-            onClick={clearSelection}
-            className="rounded px-2 py-1 hover:text-[var(--text)]"
-          >
+          <button onClick={clearSelection} className="rounded px-2 py-1 hover:text-[var(--text)]">
             Clear
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)]">
-        <table className="w-full text-left">
-          <thead className="bg-[var(--panel-2)] text-[11px] uppercase tracking-wide text-[var(--faint)]">
-            <tr>
-              <Th className="w-8"> </Th>
-              <Th>Patient</Th>
-              <Th>Age</Th>
-              <Th>Care need</Th>
-              <Th>Risk</Th>
-              <Th>Channel</Th>
-              <Th>Trigger</Th>
-              <Th>Last contacted</Th>
-              <Th>Status</Th>
-              <Th>Source</Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--border-soft)]">
-            {filtered.map((p) => {
-              const locked = isLocked(p);
-              const checked = selectedIds.includes(p.id);
-              return (
-                <tr
-                  key={p.id}
-                  onClick={() => !locked && toggleSelect(p.id)}
-                  className={`text-[13px] transition-colors ${
-                    locked
-                      ? "cursor-not-allowed bg-[var(--bg)] opacity-50"
-                      : checked
-                        ? "cursor-pointer bg-[var(--accent-soft)]/40"
-                        : "cursor-pointer bg-[var(--panel)] hover:bg-[var(--panel-2)]"
-                  }`}
-                >
-                  <Td>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={locked}
-                      readOnly
-                      className="h-3.5 w-3.5 accent-[var(--accent)]"
-                    />
-                  </Td>
-                  <Td>
-                    <div className="font-medium text-[var(--text)]">
-                      {p.name}
-                    </div>
-                    <div className="text-[11px] text-[var(--faint)]">
-                      {p.id} · {p.language}
-                    </div>
-                  </Td>
-                  <Td className="tabular text-[var(--muted)]">{p.age}</Td>
-                  <Td className="text-[var(--muted)]">{p.careNeed}</Td>
-                  <Td>
-                    <RiskBadge risk={p.risk} />
-                  </Td>
-                  <Td>
-                    <ChannelBadge channel={p.channel} />
-                  </Td>
-                  <Td className="text-[var(--muted)]">{p.triggerType}</Td>
-                  <Td className="text-[var(--muted)]">{p.lastContacted}</Td>
-                  <Td>
-                    <StatusBadge status={p.status} />
-                  </Td>
-                  <Td>
-                    <SourceBadge source={p.source} />
-                  </Td>
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={10}
-                  className="bg-[var(--panel)] px-4 py-10 text-center text-[13px] text-[var(--faint)]"
-                >
-                  No patients match these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* Card grid */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((a) => (
+          <AppointmentCard
+            key={a.appointmentId}
+            record={a}
+            selected={selectedIds.includes(a.appointmentId)}
+            onToggle={() => {
+              if (a.appointmentStatus !== "Confirmed") toggleSelect(a.appointmentId);
+            }}
+          />
+        ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full rounded-lg border border-[var(--border)] bg-[var(--panel)] py-12 text-center text-[13px] text-[var(--faint)]">
+            No appointments match these filters.
+          </div>
+        )}
       </div>
 
       {/* Sticky dispatch bar */}
       <div className="sticky bottom-4 mt-4 flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--panel)]/95 p-3 backdrop-blur">
         <div className="text-[13px] text-[var(--muted)]">
-          <span className="font-semibold text-[var(--text)]">
-            {selectedIds.length}
-          </span>{" "}
-          selected · Confirmed and Opted-out rows are locked (human gate)
+          <span className="font-semibold text-[var(--text)]">{selectedIds.length}</span>{" "}
+          selected · Agent workflow will process the first selected record
         </div>
         <button
           onClick={handleDispatch}
           disabled={selectedIds.length === 0}
           className="rounded-md bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border)] disabled:text-[var(--faint)]"
         >
-          Send to Agent Workflow →
+          Send to Agent Flow →
         </button>
       </div>
-
-      <AddPatientModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }
 
-function PageHeader() {
+function AppointmentCard({
+  record,
+  selected,
+  onToggle,
+}: {
+  record: AppointmentRecord;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const locked = record.appointmentStatus === "Confirmed";
+  const statusCls = STATUS_COLORS[record.appointmentStatus] ?? "border-[var(--border)]";
+  const riskCls = RISK_COLORS[record.riskLevel] ?? "";
+
   return (
-    <header className="pt-2">
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-[var(--accent)]">
-        <span>Step 01 — Setup</span>
+    <div
+      onClick={onToggle}
+      className={`rounded-lg border p-4 transition-all ${
+        locked
+          ? "cursor-not-allowed opacity-50 border-[var(--border)] bg-[var(--bg)]"
+          : selected
+          ? "cursor-pointer border-[var(--accent)] bg-[var(--accent-soft)]/20 ring-1 ring-[var(--accent)]/30"
+          : "cursor-pointer border-[var(--border)] bg-[var(--panel)] hover:border-[var(--accent)]/40 hover:bg-[var(--panel-2)]"
+      }`}
+    >
+      {/* Card header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={locked}
+            readOnly
+            className="h-3.5 w-3.5 shrink-0 accent-[var(--accent)]"
+          />
+          <div>
+            <div className="text-[14px] font-semibold text-[var(--text)]">{record.patientName}</div>
+            <div className="text-[11px] text-[var(--faint)]">
+              {record.patientId} · {record.age}yo · {record.preferredLanguage}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusCls}`}>
+            {record.appointmentStatus}
+          </span>
+          <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${riskCls}`}>
+            {record.riskLevel} risk
+          </span>
+        </div>
       </div>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight">Trigger Intake</h1>
-      <p className="mt-1 max-w-2xl text-[14px] text-[var(--muted)]">
-        Review patients with a pending care need, curate who is eligible, and
-        dispatch the cohort to the agent. This is the human gate that keeps the
-        AI bounded.
-      </p>
-    </header>
+
+      {/* Service type + appointment time */}
+      <div className="mt-3 rounded-md border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2">
+        <div className="text-[13px] font-semibold text-[var(--text)]">{record.serviceType}</div>
+        <div className="mt-0.5 text-[11px] text-[var(--muted)]">{formatDateTime(record.appointmentDateTime)}</div>
+        {record.expectedDurationMinutes && (
+          <div className="text-[11px] text-[var(--faint)]">Est. {record.expectedDurationMinutes} min · {record.location.split("—")[1]?.trim() ?? record.location}</div>
+        )}
+      </div>
+
+      {/* Clinical codes */}
+      <div className="mt-3 space-y-1.5">
+        <CodeRow label="Diagnosis" value={`${record.icd10Code} — ${record.icd10Description}`} />
+        <CodeRow label="CPT family" value={record.cptFamily} />
+        {record.drugCode && <CodeRow label="Drug / product" value={record.drugCode} />}
+        <CodeRow label="Care need" value={record.careNeed} />
+      </div>
+
+      {/* Trigger + channel */}
+      <div className="mt-3 flex items-center justify-between text-[11px]">
+        <span className="text-[var(--faint)]">
+          Trigger: <span className="text-[var(--muted)]">{record.triggerReason}</span>
+        </span>
+        <span className="rounded bg-[var(--panel-2)] px-1.5 py-0.5 text-[var(--muted)]">
+          {record.communicationPreference}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CodeRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-2 text-[11px]">
+      <span className="w-20 shrink-0 text-[var(--faint)]">{label}</span>
+      <span className="font-mono text-[var(--muted)]">{value}</span>
+    </div>
   );
 }
 
@@ -251,30 +280,32 @@ function LaneCard({
   desc,
   count,
   accent,
-  action,
+  highlight,
 }: {
   title: string;
   desc: string;
   count: number;
   accent?: boolean;
-  action?: React.ReactNode;
+  highlight?: "accent" | "amber" | "green";
 }) {
+  const borderColor =
+    accent || highlight === "accent"
+      ? "border-[var(--accent)]/30"
+      : highlight === "amber"
+      ? "border-[var(--amber)]/30"
+      : highlight === "green"
+      ? "border-[var(--green)]/30"
+      : "border-[var(--border)]";
+
   return (
-    <div
-      className={`flex items-center justify-between rounded-lg border bg-[var(--panel)] p-3 ${
-        accent ? "border-[var(--accent)]/30" : "border-[var(--border)]"
-      }`}
-    >
+    <div className={`flex items-center justify-between rounded-lg border bg-[var(--panel)] p-3 ${borderColor}`}>
       <div>
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold">{title}</span>
-          <span className="tabular rounded bg-[var(--panel-2)] px-1.5 py-0.5 text-[11px] text-[var(--muted)]">
-            {count}
-          </span>
-        </div>
+        <div className="text-[13px] font-semibold">{title}</div>
         <div className="mt-0.5 text-[12px] text-[var(--faint)]">{desc}</div>
       </div>
-      {action}
+      <span className="tabular rounded bg-[var(--panel-2)] px-2 py-1 text-[18px] font-bold text-[var(--text)]">
+        {count}
+      </span>
     </div>
   );
 }
@@ -283,12 +314,12 @@ function Select({
   value,
   onChange,
   options,
-  labels,
+  placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: string[];
-  labels?: Record<string, string>;
+  placeholder?: string;
 }) {
   return (
     <select
@@ -298,29 +329,9 @@ function Select({
     >
       {options.map((o) => (
         <option key={o} value={o}>
-          {o === "All" ? "All" : labels?.[o] ?? o}
+          {o === "All" ? (placeholder ? `All ${placeholder}s` : "All") : o}
         </option>
       ))}
     </select>
   );
-}
-
-function Th({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <th className={`px-3 py-2 font-medium ${className}`}>{children}</th>;
-}
-
-function Td({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>;
 }

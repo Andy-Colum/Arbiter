@@ -1,7 +1,7 @@
-import { Patient } from "@/lib/types";
+import { AppointmentRecord } from "@/lib/types";
 
-export function EmailChannel({ patient }: { patient: Patient }) {
-  const first = patient.name.split(" ")[0];
+export function EmailChannel({ patient }: { patient: AppointmentRecord }) {
+  const first = patient.patientName.split(" ")[0];
   return (
     <div className="flex h-full flex-col bg-[#0c0c10]">
       <div className="border-b border-white/10 bg-[#161619] px-4 py-3 pt-8">
@@ -27,7 +27,7 @@ export function EmailChannel({ patient }: { patient: Patient }) {
           </div>
 
           <h3 className="mt-3 text-[14px] font-bold leading-snug text-white">
-            Let's get your {patient.careNeed.toLowerCase()} rebooked
+            Your {patient.serviceType} appointment — action needed
           </h3>
 
           <div className="mt-2 space-y-2 text-[12px] leading-relaxed text-[var(--text)]">
