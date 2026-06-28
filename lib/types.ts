@@ -158,3 +158,28 @@ export interface ScenarioChip {
   actionTriggered: string;
   traceEvents: Omit<BackendTraceEvent, "traceId" | "timestamp">[];
 }
+
+// Dashboard: cancellation/no-show reason capture
+export type CancellationReason =
+  | "no_reason_given"
+  | "transportation"
+  | "illness"
+  | "financial"
+  | "schedule_conflict"
+  | "prep_confusion"
+  | "clinical_concern"
+  | "wrong_number"
+  | "other";
+
+export interface ReasonStat {
+  reason: CancellationReason;
+  pct: number;
+  count: number;
+}
+
+// Dashboard: staffing savings calculator
+export interface StaffingCalcInputs {
+  avgMinutesPerBooking: number; // default 10
+  hourlyWage: number; // default 28
+  patientsHandled: number; // default from funnel (contacted), editable
+}
