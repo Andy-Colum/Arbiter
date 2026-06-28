@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
+import { CohortProvider } from "@/lib/store";
 
 export const metadata: Metadata = {
-  title: "Arbiter AI — Demo",
+  title: "Arbiter — Pinecrest Pilot Control Room",
   description:
-    "Agentic patient outreach for healthcare — principle, architecture, and the patient experience.",
+    "Closed-loop leakage recovery: Confirm → Capture → Recover. Operator demo with mock data.",
 };
 
 export default function RootLayout({
@@ -16,10 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="glow min-h-screen">
-          <Nav />
-          <main className="mx-auto max-w-6xl px-6 pb-24 pt-10">{children}</main>
-        </div>
+        <CohortProvider>
+          <div className="min-h-screen">
+            <Nav />
+            <main className="mx-auto max-w-7xl px-6 pb-24 pt-6">{children}</main>
+          </div>
+        </CohortProvider>
       </body>
     </html>
   );

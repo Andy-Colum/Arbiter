@@ -1,16 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0a0e1a;
-  --bg-soft: #111729;
-  --panel: #151c2e;
-  --border: #232c44;
-  --text: #e6ebf5;
-  --muted: #8b97b3;
-  --accent: #5b8cff;
-  --accent-soft: #2a3a66;
-  --teal: #2dd4bf;
+  --bg: #0b0b0d;
+  --bg-soft: #111114;
+  --panel: #16161a;
+  --panel-2: #1c1c21;
+  --border: #2a2a31;
+  --border-soft: #232329;
+  --text: #f4f4f6;
+  --muted: #9a9aa6;
+  --faint: #6c6c78;
+
+  --accent: #e5384a; /* red */
+  --accent-hover: #f04658;
+  --accent-soft: #3a1a1f;
+
+  --green: #34d399;
   --amber: #fbbf24;
+  --blue: #60a5fa;
 }
 
 html,
@@ -22,16 +29,26 @@ body {
 
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
 }
 
-* {
-  scroll-behavior: smooth;
+/* Dense, calm table styling */
+table {
+  border-collapse: collapse;
 }
 
-.glow {
-  background: radial-gradient(
-    600px circle at 50% 0%,
-    rgba(91, 140, 255, 0.12),
-    transparent 70%
-  );
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }

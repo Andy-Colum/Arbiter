@@ -1,66 +1,65 @@
-export function EmailChannel() {
+import { Patient } from "@/lib/types";
+
+export function EmailChannel({ patient }: { patient: Patient }) {
+  const first = patient.name.split(" ")[0];
   return (
-    <div className="flex h-full flex-col bg-[#0c1322]">
-      <div className="border-b border-white/10 bg-[#121a2e] px-4 py-3 pt-8">
-        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+    <div className="flex h-full flex-col bg-[#0c0c10]">
+      <div className="border-b border-white/10 bg-[#161619] px-4 py-3 pt-8">
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--faint)]">
           Inbox
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="rounded-2xl border border-white/10 bg-[#101829] p-4">
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="rounded-xl border border-white/10 bg-[#131317] p-4">
           <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
-              R
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-bold text-white">
+              P
             </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-white">
-                Riverside Cardiology
+              <div className="truncate text-[13px] font-semibold text-white">
+                Pinecrest Care
               </div>
-              <div className="truncate text-[11px] text-[var(--muted)]">
-                care@riverside-cardio.org
+              <div className="truncate text-[10px] text-[var(--faint)]">
+                care@pinecrest-health.org
               </div>
             </div>
           </div>
 
-          <h3 className="mt-3 text-[15px] font-bold leading-snug text-white">
-            Time for your follow-up with Dr. Chen
+          <h3 className="mt-3 text-[14px] font-bold leading-snug text-white">
+            Let's get your {patient.careNeed.toLowerCase()} rebooked
           </h3>
 
-          <div className="mt-3 space-y-3 text-[12.5px] leading-relaxed text-[var(--text)]">
-            <p>Hi Maria,</p>
+          <div className="mt-2 space-y-2 text-[12px] leading-relaxed text-[var(--text)]">
+            <p>Hi {first},</p>
             <p>
-              It's been about six months since your last visit. Dr. Chen
-              recommends a routine follow-up in the next two weeks. Pick a time
-              that works — it takes one tap.
+              We noticed your recent appointment was missed. Your care team
+              recommends rebooking soon — pick a time that works in one tap.
             </p>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {["Tue Jul 14 · 10:30 AM", "Thu Jul 16 · 2:00 PM", "Fri Jul 17 · 9:15 AM"].map(
-              (slot, i) => (
-                <div
-                  key={slot}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-[12.5px] ${
-                    i === 1
-                      ? "border-[var(--accent)] bg-[var(--accent-soft)] text-white"
-                      : "border-white/10 bg-[#0c1322] text-[var(--text)]"
-                  }`}
-                >
-                  <span>{slot}</span>
-                  <span className="text-[var(--accent)]">Select →</span>
-                </div>
-              )
-            )}
+          <div className="mt-3 space-y-2">
+            {["Tue · 3:00 PM", "Wed · 10:30 AM", "Fri · 9:15 AM"].map((slot, i) => (
+              <div
+                key={slot}
+                className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12px] ${
+                  i === 0
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)] text-white"
+                    : "border-white/10 bg-[#0c0c10] text-[var(--text)]"
+                }`}
+              >
+                <span>{slot}</span>
+                <span className="text-[var(--accent)]">Select →</span>
+              </div>
+            ))}
           </div>
 
-          <button className="mt-4 w-full rounded-xl bg-[var(--accent)] py-2.5 text-[13px] font-semibold text-white">
+          <button className="mt-3 w-full rounded-lg bg-[var(--accent)] py-2 text-[12px] font-semibold text-white">
             See all available times
           </button>
 
-          <p className="mt-4 text-[11px] leading-relaxed text-[var(--muted)]">
-            No fasting required. Reply to this email and our assistant will help
-            — or call us at (555) 010-2200.
+          <p className="mt-3 text-[10px] leading-relaxed text-[var(--faint)]">
+            Questions? Reply and our assistant will help, or call (555) 010-2200.
           </p>
         </div>
       </div>

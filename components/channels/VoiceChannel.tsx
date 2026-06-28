@@ -1,48 +1,61 @@
-const transcript = [
-  { who: "Arbiter", line: "Hi, is this Maria? This is the assistant calling on behalf of Riverside Cardiology." },
-  { who: "Maria", line: "Yes, this is she." },
-  { who: "Arbiter", line: "Dr. Chen would like to see you for a follow-up. I can book it now — would Thursday the 16th at 2 PM work?" },
-  { who: "Maria", line: "That works for me." },
-  { who: "Arbiter", line: "Perfect, you're booked. I've sent a text confirmation and updated your chart. Take care, Maria." },
-];
+import { Patient } from "@/lib/types";
 
-export function VoiceChannel() {
+export function VoiceChannel({
+  patient,
+  playing,
+}: {
+  patient: Patient;
+  playing: boolean;
+}) {
+  const first = patient.name.split(" ")[0];
+  const transcript = [
+    { who: "Arbiter", line: `Hi, is this ${first}? This is the assistant calling on behalf of Pinecrest Care.` },
+    { who: first, line: "Yes, speaking." },
+    { who: "Arbiter", line: `Your ${patient.careNeed.toLowerCase()} was missed — I can rebook now. Does Tuesday at 3 PM work?` },
+    { who: first, line: "That works." },
+    { who: "Arbiter", line: "Great, you're rebooked. I've logged it and a confirmation is on its way." },
+  ];
+
   return (
-    <div className="flex h-full flex-col items-center bg-gradient-to-b from-[#101a33] to-[#0c1322] px-5 pb-5 pt-12">
+    <div className="flex h-full flex-col items-center bg-gradient-to-b from-[#1a1216] to-[#0c0c10] px-5 pb-5 pt-12">
       <div className="text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[var(--accent)] text-3xl font-bold text-white shadow-lg shadow-[var(--accent)]/30">
-          R
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent)] text-2xl font-bold text-white">
+          P
         </div>
-        <div className="mt-3 text-lg font-semibold text-white">
-          Riverside Cardiology
+        <div className="mt-2 text-[15px] font-semibold text-white">
+          Pinecrest Care
         </div>
-        <div className="text-xs text-[var(--teal)]">● Arbiter calling · 0:42</div>
+        <div className="text-[11px] text-[var(--green)]">
+          {playing ? "● Arbiter calling · 0:38" : "Tap play to simulate call"}
+        </div>
       </div>
 
-      {/* waveform */}
-      <div className="mt-6 flex h-12 items-center justify-center gap-1">
+      <div className="mt-5 flex h-10 items-center justify-center gap-1">
         {[6, 14, 9, 20, 28, 16, 24, 12, 30, 18, 10, 22, 8].map((h, i) => (
           <span
             key={i}
             className="w-1 rounded-full bg-[var(--accent)]"
             style={{
               height: `${h}px`,
-              animation: `pulse 1s ease-in-out ${i * 0.08}s infinite alternate`,
+              opacity: playing ? 1 : 0.3,
+              animation: playing
+                ? `vpulse 1s ease-in-out ${i * 0.08}s infinite alternate`
+                : "none",
             }}
           />
         ))}
       </div>
 
-      <div className="mt-6 w-full flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1322]/60 p-3">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div className="mt-5 w-full flex-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0c0c10]/60 p-3">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--faint)]">
           Live transcript
         </div>
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {transcript.map((t, i) => (
-            <div key={i} className="text-[12px] leading-snug">
+            <div key={i} className="text-[11.5px] leading-snug">
               <span
                 className={`font-semibold ${
-                  t.who === "Arbiter" ? "text-[var(--accent)]" : "text-[var(--teal)]"
+                  t.who === "Arbiter" ? "text-[var(--accent)]" : "text-[var(--green)]"
                 }`}
               >
                 {t.who}:{" "}
@@ -53,20 +66,8 @@ export function VoiceChannel() {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg">
-          🔇
-        </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-lg">
-          📵
-        </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg">
-          🔊
-        </div>
-      </div>
-
       <style>{`
-        @keyframes pulse {
+        @keyframes vpulse {
           from { transform: scaleY(0.4); opacity: 0.5; }
           to { transform: scaleY(1); opacity: 1; }
         }
